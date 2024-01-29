@@ -16,8 +16,7 @@ import fastsim.fastsimrust as fsr
 # 4wd is assumed to be not engaged on cycles used because
 # "Veh_4WD_engaged_CAN[]" and "Veh_4WD_L_engaged_CAN[]" are always zero
 
-f150_resampled_data_dir = Path(
-    fsim.__file__).parent / "resources/vehdb/2017_Ford_F150_Ecoboost"
+f150_resampled_data_dir = Path("./fastsim/python/resources/vehdb/2017_Ford_F150_Ecoboost")
 
 # raw data from https://www.anl.gov/taps/d3-2017-ford-f150
 # f150_raw_data_dir = Path().home() / \
