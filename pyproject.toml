@@ -3,7 +3,7 @@ requires = ["maturin>=0.15,<0.16"]
 build-backend = "maturin"
 
 [project]
-name = "testfastsim"
+name = "fastsim"
 version = "2.1.2"
 authors = [{ name = "NREL/MTES/CIMS/MBAP Group", email = "fastsim@nrel.gov" }]
 description = "Tool for modeling vehicle powertrains"
