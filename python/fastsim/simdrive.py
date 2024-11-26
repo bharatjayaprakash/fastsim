@@ -2194,16 +2194,19 @@ class SimDrive(object):
         self.fs_cumu_mj_out_ach = (
             self.fs_kw_out_ach * self.cyc.dt_s).cumsum() * 1e-3
 
-        if self.fs_kwh_out_ach.sum() == 0:
+        self.ess_dischg_kj = - \
+            (self.soc[-1] - self.soc[0]) * self.veh.ess_max_kwh * 3.6e3
+
+        # Changed to include ess_dischg_kj in mpgge calculation
+        if self.fs_kwh_out_ach.sum() == 0 and self.ess_dischg_kj == 0:
             self.mpgge = 0.0
 
         else:
-            self.mpgge = self.dist_mi.sum() / (self.fs_kwh_out_ach.sum() / self.props.kwh_per_gge)
+            self.mpgge = self.dist_mi.sum() / ((self.fs_kwh_out_ach.sum() + (self.ess_dischg_kj / 3.6e3)) / self.props.kwh_per_gge)
 
         self.roadway_chg_kj = (
             self.roadway_chg_kw_out_ach * self.cyc.dt_s).sum()
-        self.ess_dischg_kj = - \
-            (self.soc[-1] - self.soc[0]) * self.veh.ess_max_kwh * 3.6e3
+
         dist_mi = self.dist_mi.sum()
         self.battery_kwh_per_mi = (
             self.ess_dischg_kj / 3.6e3) / dist_mi if dist_mi > 0 else 0.0
@@ -2483,9 +2486,9 @@ class SimDrivePost(object):
                    '_neg'] = np.trapz(np.array(tempvars[var + '_neg']), np.array(self.cyc.time_s))
 
         output['dist_miles_final'] = sum(np.array(self.dist_mi))
-        if sum(np.array(self.fs_kwh_out_ach)) > 0:
+        if (sum(np.array(self.fs_kwh_out_ach)) + self.ess_dischg_kj / 3.6e3) > 0:
             output['mpgge'] = sum(
-                np.array(self.dist_mi)) / sum(np.array(self.fs_kwh_out_ach)) * self.props.kwh_per_gge
+                np.array(self.dist_mi)) / (sum(np.array(self.fs_kwh_out_ach)) + (self.ess_dischg_kj / 3.6e3)) * self.props.kwh_per_gge
         else:
             output['mpgge'] = 0
 
