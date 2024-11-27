@@ -1853,9 +1853,9 @@ impl RustSimDrive {
         self.trace_miss = false;
         let dist_m = self.cyc0.dist_m().sum();
         self.trace_miss_dist_frac = if dist_m > 0.0 {
-            (self.dist_m.sum() - self.cyc0.dist_m().sum()).abs() / dist_m
+            (self.dist_m.sum() - dist_m).abs() / dist_m
         } else {
-            0.0
+            bail!("Vehicle did not move forward.");
         };
         self.trace_miss_time_frac = (self
             .cyc

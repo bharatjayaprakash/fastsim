@@ -43,7 +43,6 @@ pub mod params;
 pub mod pyo3imports;
 pub mod simdrive;
 pub use simdrive::simdrive_impl;
-pub mod resources;
 pub mod simdrivelabel;
 pub mod thermal;
 pub mod traits;
@@ -53,9 +52,6 @@ pub mod vehicle_import;
 pub mod vehicle_thermal;
 pub mod vehicle_utils;
 
-#[cfg(feature = "dev-proc-macros")]
-pub use dev_proc_macros as proc_macros;
-#[cfg(not(feature = "dev-proc-macros"))]
 pub use fastsim_proc_macros as proc_macros;
 
 #[cfg_attr(feature = "pyo3", pyo3imports::pyfunction)]

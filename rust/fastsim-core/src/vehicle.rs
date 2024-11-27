@@ -83,6 +83,12 @@ lazy_static! {
         self.clone()
     }
 
+    #[pyo3(name = "list_resources")]
+    /// list available vehicle resources
+    pub fn list_resources_py(&self) -> Vec<String> {
+        RustVehicle::list_resources()
+    }
+
     #[staticmethod]
     #[pyo3(name = "mock_vehicle")]
     fn mock_vehicle_py() -> Self {
@@ -558,7 +564,7 @@ pub struct RustVehicle {
 /// RustVehicle rust methods
 impl RustVehicle {
     const VEHICLE_DIRECTORY_URL: &'static str =
-        &"https://raw.githubusercontent.com/NREL/fastsim-vehicles/main/";
+        "https://raw.githubusercontent.com/NREL/fastsim-vehicles/main/";
     /// Sets the following parameters:
     /// - `ess_mass_kg`
     /// - `mc_mass_kg`
@@ -771,7 +777,8 @@ impl RustVehicle {
                 self.modern_max = MODERN_MAX;
             }
             let modern_diff = self.modern_max - arrmax(&LARGE_BASELINE_EFF);
-            let large_baseline_eff_adj: Vec<f64> = LARGE_BASELINE_EFF.iter().map(|x| x + modern_diff).collect();
+            let large_baseline_eff_adj: Vec<f64> =
+                LARGE_BASELINE_EFF.iter().map(|x| x + modern_diff).collect();
             let mc_kw_adj_perc = max(
                 0.0,
                 min(
@@ -1046,6 +1053,7 @@ impl RustVehicle {
     ///   path from url directory or FASTSim repository (if applicable)  
     /// - url: url for vehicle repository where vehicle will be downloaded from,
     ///   if None, assumed to be downloaded from vehicle FASTSim repo  
+    ///
     /// Note: The URL needs to be a URL pointing directly to a file, for example
     /// a raw github URL, split up so that the "url" argument is the path to the
     /// directory, and the "vehicle_file_name" is the path within the directory
@@ -1064,12 +1072,12 @@ impl RustVehicle {
             Some(s) => {
                 s.as_ref().trim_end_matches('/').to_owned()
                     + "/"
-                    + &vehicle_file_name.as_ref().trim_start_matches('/')
+                    + vehicle_file_name.as_ref().trim_start_matches('/')
             }
             None => Self::VEHICLE_DIRECTORY_URL.to_string() + vehicle_file_name.as_ref(),
         };
-        let mut vehicle =
-            Self::from_url(&url_internal, false).with_context(|| "Could not parse vehicle from url")?;
+        let mut vehicle = Self::from_url(&url_internal, false)
+            .with_context(|| "Could not parse vehicle from url")?;
         let vehicle_origin = "Vehicle from ".to_owned() + url_internal.as_str();
         vehicle.doc = Some(vehicle_origin);
         Ok(vehicle)
@@ -1114,6 +1122,7 @@ impl SerdeAPI for RustVehicle {
     /// accepts yaml and json file types  
     /// # Arguments  
     /// - url: URL (either as a string or url type) to object  
+    ///
     /// Note: The URL needs to be a URL pointing directly to a file, for example
     /// a raw github URL.
     fn from_url<S: AsRef<str>>(url: S, skip_init: bool) -> anyhow::Result<Self> {
