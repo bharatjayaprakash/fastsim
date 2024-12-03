@@ -234,10 +234,7 @@ impl SimDriveHot {
             },
             None => (
                 None, // 1st return element
-                match init_state {
-                    Some(state) => state, // 2nd return element
-                    None => ThermalState::default(),
-                },
+                init_state.unwrap_or_default(),
             ),
         };
 
@@ -416,8 +413,7 @@ impl SimDriveHot {
         // limited between 0 and 1, but should really not get near 1
         self.state.fc_qdot_per_net_heat = (self.vehthrm.fc_coeff_from_comb
             * (self.state.fc_te_adiabatic_deg_c - self.state.fc_te_deg_c))
-            .min(1.0)
-            .max(0.0);
+            .clamp(0.0, 1.0);
 
         // heat generation
         self.state.fc_qdot_kw = self.state.fc_qdot_per_net_heat
@@ -481,8 +477,7 @@ impl SimDriveHot {
         if let CabinHvacModelTypes::Internal(hvac_model) = &mut self.vehthrm.cabin_hvac_model {
             // flat plate model for isothermal, mixed-flow from Incropera and deWitt, Fundamentals of Heat and Mass
             // Transfer, 7th Edition
-            let cab_te_film_ext_deg_c =
-                0.5 * (self.state.cab_te_deg_c + self.state.amb_te_deg_c);
+            let cab_te_film_ext_deg_c = 0.5 * (self.state.cab_te_deg_c + self.state.amb_te_deg_c);
             let re_l = self.air.get_rho(cab_te_film_ext_deg_c, None)
                 * self.sd.mps_ach[i - 1]
                 * self.vehthrm.cab_l_length
