@@ -493,20 +493,18 @@ impl SimDriveHot {
                 (0.037 * re_l.powf(0.8) - a) * self.air.get_pr(cab_te_film_ext_deg_c)
             };
 
-            if self.sd.mph_ach[i - 1] > 2.0 {
-                self.state.cab_qdot_to_amb_kw = 1e-3
-                    * (self.vehthrm.cab_l_length * self.vehthrm.cab_l_width)
+            self.state.cab_qdot_to_amb_kw = if self.sd.mph_ach[i - 1] > 2.0 {
+                1e-3 * (self.vehthrm.cab_l_length * self.vehthrm.cab_l_width)
                     / (1.0
                         / (nu_l_bar * self.air.get_k(cab_te_film_ext_deg_c)
                             / self.vehthrm.cab_l_length)
                         + self.vehthrm.cab_r_to_amb)
-                    * (self.state.cab_te_deg_c - self.state.amb_te_deg_c);
+                    * (self.state.cab_te_deg_c - self.state.amb_te_deg_c)
             } else {
-                self.state.cab_qdot_to_amb_kw = 1e-3
-                    * (self.vehthrm.cab_l_length * self.vehthrm.cab_l_width)
+                1e-3 * (self.vehthrm.cab_l_length * self.vehthrm.cab_l_width)
                     / (1.0 / self.vehthrm.cab_htc_to_amb_stop + self.vehthrm.cab_r_to_amb)
-                    * (self.state.cab_te_deg_c - self.state.amb_te_deg_c);
-            }
+                    * (self.state.cab_te_deg_c - self.state.amb_te_deg_c)
+            };
 
             let te_delta_vs_set_deg_c = self.state.cab_te_deg_c - hvac_model.te_set_deg_c;
             let te_delta_vs_amb_deg_c = self.state.cab_te_deg_c - self.state.amb_te_deg_c;
