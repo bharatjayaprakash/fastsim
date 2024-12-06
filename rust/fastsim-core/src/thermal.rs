@@ -910,41 +910,35 @@ impl SimDriveHot {
             if let FcModelTypes::Internal(fc_temp_eff_model, fc_temp_eff_comp) =
                 &self.vehthrm.fc_model
             {
-                if let FcTempEffModel::Linear(FcTempEffModelLinear {
-                    offset,
-                    slope,
-                    minimum,
-                }) = fc_temp_eff_model
-                {
-                    self.state.fc_eta_temp_coeff =
-                        max(*minimum, min(1.0, offset + slope * self.state.fc_te_deg_c));
-                }
-
-                if let FcTempEffModel::Exponential(FcTempEffModelExponential {
-                    offset,
-                    lag,
-                    minimum,
-                }) = fc_temp_eff_model
-                {
-                    match fc_temp_eff_comp {
-                        FcTempEffComponent::FuelConverter => {
-                            self.state.fc_eta_temp_coeff = (1.0
+                self.state.fc_eta_temp_coeff = match fc_temp_eff_model {
+                    FcTempEffModel::Linear(FcTempEffModelLinear {
+                        offset,
+                        slope,
+                        minimum,
+                    }) => max(*minimum, min(1.0, offset + slope * self.state.fc_te_deg_c)),
+                    FcTempEffModel::Exponential(FcTempEffModelExponential {
+                        offset,
+                        lag,
+                        minimum,
+                    }) => {
+                        match fc_temp_eff_comp {
+                            FcTempEffComponent::FuelConverter => (1.0
                                 - f64::exp(-1.0 / lag * (self.state.fc_te_deg_c - offset)))
-                            .max(*minimum);
-                        }
-                        FcTempEffComponent::CatAndFC => {
-                            if self.state.cat_te_deg_c < self.vehthrm.cat_te_lightoff_deg_c {
-                                self.state.fc_eta_temp_coeff = (1.0
-                                    - f64::exp(-1.0 / lag * (self.state.fc_te_deg_c - offset)))
-                                .max(*minimum);
-                                // reduce efficiency to account for catalyst not being lit off
-                                self.state.fc_eta_temp_coeff *= self.vehthrm.cat_fc_eta_coeff;
+                            .max(*minimum),
+                            FcTempEffComponent::CatAndFC => {
+                                if self.state.cat_te_deg_c < self.vehthrm.cat_te_lightoff_deg_c {
+                                    let fc_eta_temp_coeff = (1.0
+                                        - f64::exp(-1.0 / lag * (self.state.fc_te_deg_c - offset)))
+                                    .max(*minimum);
+                                    // reduce efficiency to account for catalyst not being lit off
+                                    fc_eta_temp_coeff * self.vehthrm.cat_fc_eta_coeff
+                                } else {
+                                    1.0
+                                }
                             }
-                        }
-                        FcTempEffComponent::Catalyst => {
-                            self.state.fc_eta_temp_coeff = (1.0
+                            FcTempEffComponent::Catalyst => (1.0
                                 - f64::exp(-1.0 / lag * (self.state.cat_te_deg_c - offset)))
-                            .max(*minimum);
+                            .max(*minimum),
                         }
                     }
                 }
