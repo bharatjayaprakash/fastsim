@@ -355,7 +355,7 @@ pub fn extend_cycle(
 
 #[cfg(feature = "pyo3")]
 #[allow(unused)]
-pub fn register(_py: Python<'_>, m: &PyModule) -> anyhow::Result<()> {
+pub fn register(_py: Python<'_>, m: &Bound<PyModule>) -> anyhow::Result<()> {
     m.add_function(wrap_pyfunction!(calc_constant_jerk_trajectory, m)?)?;
     m.add_function(wrap_pyfunction!(accel_for_constant_jerk, m)?)?;
     m.add_function(wrap_pyfunction!(speed_for_constant_jerk, m)?)?;
@@ -487,8 +487,8 @@ impl RustCycleCache {
 
     #[staticmethod]
     #[pyo3(name = "from_csv")]
-    pub fn from_csv_py(filepath: &PyAny, skip_init: Option<bool>) -> anyhow::Result<Self> {
-        Self::from_csv_file(PathBuf::extract(filepath)?, skip_init.unwrap_or_default())
+    pub fn from_csv_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> anyhow::Result<Self> {
+        Self::from_csv_file(PathBuf::extract_bound(filepath)?, skip_init.unwrap_or_default())
     }
 
     pub fn to_rust(&self) -> Self {
@@ -496,23 +496,44 @@ impl RustCycleCache {
     }
 
     #[staticmethod]
-    pub fn from_dict(dict: &PyDict, skip_init: Option<bool>) -> anyhow::Result<Self> {
-        let time_s = Array::from_vec(PyAny::get_item(dict, "time_s")?.extract()?);
+    pub fn from_dict(dict: &Bound<PyDict>, skip_init: Option<bool>) -> PyResult<Self> {
+        let time_s = Array::from_vec(dict.get_item("time_s")?.with_context(|| format_dbg!())?.extract()?);
         let cyc_len = time_s.len();
         let mut cyc = Self {
             time_s,
-            mps: Array::from_vec(PyAny::get_item(dict, "mps")?.extract()?),
-            grade: if let Ok(value) = PyAny::get_item(dict, "grade") {
-                Array::from_vec(value.extract()?)
+            mps: Array::from_vec(dict.get_item("mps")?.with_context(|| format_dbg!())?.extract()?),
+            grade: if let Ok(Some(item_res)) = dict.get_item("grade") {
+                if let Ok(grade) = item_res.extract() {
+                    Array::from_vec(grade)
+                } else {
+                    Array::default(cyc_len)
+                }
             } else {
                 Array::default(cyc_len)
             },
-            road_type: if let Ok(value) = PyAny::get_item(dict, "road_type") {
-                Array::from_vec(value.extract()?)
+            road_type: if let Ok(Some(item_res)) = dict.get_item("road_type") {
+                if let Ok(road_type) = item_res.extract() {
+                    Array::from_vec(road_type)
+                } else {
+                    Array::default(cyc_len)
+                }
             } else {
                 Array::default(cyc_len)
             },
-            name: PyAny::get_item(dict, "name").and_then(String::extract).unwrap_or_default(),
+            // name: PyAny::get_item(dict, "name").and_then(String::extract).unwrap_or_default(),
+            name: if let Ok(Some(item_res)) = dict.get_item("name") {
+                if let Ok(name) = item_res.extract() {
+                    if let Ok(name_str) = String::extract(name) {
+                        name_str
+                    } else {
+                        Default::default()
+                    }
+                } else {
+                    Default::default()
+                }
+            } else {
+                Default::default()
+            },
             orphaned: false,
         };
         if !skip_init.unwrap_or_default() {
@@ -521,8 +542,8 @@ impl RustCycleCache {
         Ok(cyc)
     }
 
-    pub fn to_dict<'py>(&self, py: Python<'py>) -> anyhow::Result<&'py PyDict> {
-        let dict = PyDict::new(py);
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> anyhow::Result<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
         dict.set_item("time_s", self.time_s.to_vec())?;
         dict.set_item("mps", self.mps.to_vec())?;
         dict.set_item("grade", self.grade.to_vec())?;

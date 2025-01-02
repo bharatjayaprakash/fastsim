@@ -394,11 +394,22 @@ pub fn get_label_fe_py(
     full_detail: Option<bool>,
     verbose: Option<bool>,
 ) -> anyhow::Result<(LabelFe, Option<HashMap<&str, RustSimDrive>>)> {
-    let result =
-        get_label_fe(veh, full_detail, verbose)?;
+    let result = get_label_fe(veh, full_detail, verbose)?;
     Ok(result)
 }
 
+/// PHEV-specific function for label fe.
+///
+/// # Arguments
+/// - `veh` : vehicle::RustVehicle
+/// - `sd` : RustSimDrive objects to use for label fe calculations
+/// - `long_params` : Struct for longparams.json values
+/// - `adj_params`: Adjusted coefficients from longparams.json
+/// - `sim_params` : RustSimDriveParams
+/// - `props` : RustPhysicalProperties
+///
+/// # Returns
+/// label fuel economy values for PHEV as a struct.
 pub fn get_label_fe_phev(
     veh: &vehicle::RustVehicle,
     sd: &mut HashMap<&str, RustSimDrive>,
@@ -407,18 +418,6 @@ pub fn get_label_fe_phev(
     sim_params: &RustSimDriveParams,
     props: &RustPhysicalProperties,
 ) -> anyhow::Result<LabelFePHEV> {
-    // PHEV-specific function for label fe.
-    //
-    // Arguments:
-    // ----------
-    // veh : vehicle::RustVehicle
-    // sd : RustSimDrive objects to use for label fe calculations
-    // long_params : Struct for longparams.json values
-    // adj_params: Adjusted coefficients from longparams.json
-    // sim_params : RustSimDriveParams
-    // props : RustPhysicalProperties
-    //
-    // Returns label fuel economy values for PHEV as a struct.
     let mut phev_calcs = LabelFePHEV {
         regen_soc_buffer: min(
             ((0.5 * veh.veh_kg * ((60. * (1. / MPH_PER_MPS)).powi(2)))
@@ -698,20 +697,28 @@ pub fn get_label_fe_phev(
 
 #[cfg(feature = "pyo3")]
 #[pyfunction(name = "get_label_fe_phev")]
-
 /// pyo3 version of [get_label_fe_phev]
 pub fn get_label_fe_phev_py(
     veh: &vehicle::RustVehicle,
-    sd: HashMap<&str, RustSimDrive>,
+    sd_dict: Bound<PyDict>,
     adj_params: AdjCoef,
     long_params: RustLongParams,
     sim_params: &RustSimDriveParams,
     props: RustPhysicalProperties,
 ) -> anyhow::Result<LabelFePHEV> {
-    let mut sd_mut = HashMap::new();
-    for (key, value) in sd {
-        sd_mut.insert(key, value);
+    let mut sd_mut: HashMap<String, RustSimDrive> = HashMap::new();
+    for (key, value) in sd_dict.keys().into_iter().zip(sd_dict.values().into_iter()) {
+        let key_extracted = key
+            .extract::<String>()
+            .with_context(|| format!("{}\nFailed to extract key", format_dbg!()))?;
+        let value_extracted = value
+            .extract()
+            .with_context(|| format!("{}\nFailed to extract value", format_dbg!()))?;
+        sd_mut.insert(key_extracted, value_extracted);
     }
+
+    let mut sd_mut =
+        HashMap::from_iter(sd_mut.iter().map(|item| (item.0.as_str(), item.1.clone())));
 
     get_label_fe_phev(
         veh,
