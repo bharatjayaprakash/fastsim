@@ -536,7 +536,7 @@ impl RustCycleCache {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> anyhow::Result<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("time_s", self.time_s.to_vec())?;
         dict.set_item("mps", self.mps.to_vec())?;
         dict.set_item("grade", self.grade.to_vec())?;
