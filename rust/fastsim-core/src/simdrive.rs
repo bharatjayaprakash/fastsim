@@ -198,6 +198,7 @@ impl Default for RustSimDriveParams {
     }
 
     #[pyo3(name = "sim_drive")]
+    #[pyo3(signature = (init_soc=None, aux_in_kw_override=None))]
     /// Initialize and run sim_drive_walk as appropriate for vehicle attribute vehPtType.
     /// Arguments
     /// ------------
@@ -213,6 +214,7 @@ impl Default for RustSimDriveParams {
         self.sim_drive(init_soc, aux_in_kw_override)
     }
 
+    #[pyo3(signature = (init_soc, aux_in_kw_override=None))]
     /// Receives second-by-second cycle information, vehicle properties,
     /// and an initial state of charge and runs sim_drive_step to perform a
     /// backward facing powertrain simulation. Method 'sim_drive' runs this
@@ -233,6 +235,7 @@ impl Default for RustSimDriveParams {
         self.walk(init_soc, aux_in_kw_override)
     }
 
+    #[pyo3(signature = (by_microtrip=None, extend_fraction=None, blend_factor=None, min_target_speed_m_per_s=None))]
     /// Sets the intelligent driver model parameters for an eco-cruise driving trajectory.
     /// This is a convenience method instead of setting the sim_params.idm* parameters yourself.
     /// - by_microtrip: bool, if True, target speed is set by microtrip, else by cycle
@@ -257,6 +260,7 @@ impl Default for RustSimDriveParams {
     }
 
     #[pyo3(name = "init_for_step")]
+    #[pyo3(signature = (init_soc, aux_in_kw_override=None))]
     /// This is a specialty method which should be called prior to using
     /// sim_drive_step in a loop.
     /// Arguments

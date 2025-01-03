@@ -27,6 +27,17 @@ pub const NETWORK_TEST_DISABLE_ENV_VAR_NAME: &str = "FASTSIM_DISABLE_NETWORK_TES
 #[cfg_attr(feature = "pyo3", pyfunction)]
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "default")]
+#[pyo3(signature = (
+    veh,
+    a_lbf,
+    b_lbf__mph,
+    c_lbf__mph2,
+    custom_rho=None,
+    custom_rho_temp_degC=None,
+    custom_rho_elevation_m=None,
+    simdrive_optimize=None,
+    _show_plots=None,
+))]
 pub fn abc_to_drag_coeffs(
     veh: &mut RustVehicle,
     a_lbf: f64,

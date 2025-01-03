@@ -215,6 +215,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg(feature = "resources")]
         #[staticmethod]
         #[pyo3(name = "from_resource")]
+        #[pyo3(signature = (filepath, skip_init=None))]
         pub fn from_resource_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_resource(
                 PathBuf::extract_bound(filepath)?, 
@@ -246,6 +247,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_file")]
+        #[pyo3(signature = (filepath, skip_init=None))]
         pub fn from_file_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_file(
                 PathBuf::extract_bound(filepath)?, 
@@ -274,6 +276,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_str")]
+        #[pyo3(signature = (contents, format, skip_init=None))]
         pub fn from_str_py(contents: &str, format: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_str(contents, format, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
@@ -292,6 +295,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_json")]
+        #[pyo3(signature = (json_str, skip_init=None))]
         pub fn from_json_py(json_str: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_json(json_str, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
@@ -310,6 +314,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_yaml")]
+        #[pyo3(signature = (yaml_str, skip_init=None))]
         pub fn from_yaml_py(yaml_str: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_yaml(yaml_str, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }

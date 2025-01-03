@@ -487,6 +487,7 @@ impl RustCycleCache {
 
     #[staticmethod]
     #[pyo3(name = "from_csv")]
+    #[pyo3(signature = (filepath, skip_init=None))]
     pub fn from_csv_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> anyhow::Result<Self> {
         Self::from_csv_file(PathBuf::extract_bound(filepath)?, skip_init.unwrap_or_default())
     }
@@ -496,6 +497,7 @@ impl RustCycleCache {
     }
 
     #[staticmethod]
+    #[pyo3(signature = (dict, skip_init=None))]
     pub fn from_dict(dict: &Bound<PyDict>, skip_init: Option<bool>) -> PyResult<Self> {
         let time_s = Array::from_vec(dict.get_item("time_s")?.with_context(|| format_dbg!())?.extract()?);
         let cyc_len = time_s.len();
@@ -520,17 +522,8 @@ impl RustCycleCache {
             } else {
                 Array::default(cyc_len)
             },
-            // name: PyAny::get_item(dict, "name").and_then(String::extract).unwrap_or_default(),
             name: if let Ok(Some(item_res)) = dict.get_item("name") {
-                if let Ok(name) = item_res.extract() {
-                    if let Ok(name_str) = String::extract(name) {
-                        name_str
-                    } else {
-                        Default::default()
-                    }
-                } else {
-                    Default::default()
-                }
+                String::extract_bound(&item_res).unwrap_or_default()
             } else {
                 Default::default()
             },
@@ -569,6 +562,7 @@ impl RustCycleCache {
     }
 
     #[pyo3(name = "modify_with_braking_trajectory")]
+    #[pyo3(signature = (brake_accel_m_per_s2, idx, dts_m=None))]
     pub fn modify_with_braking_trajectory_py(
         &mut self,
         brake_accel_m_per_s2: f64,

@@ -388,6 +388,7 @@ pub fn get_label_fe(
 
 #[cfg(feature = "pyo3")]
 #[pyfunction(name = "get_label_fe")]
+#[pyo3(signature = (veh, full_detail=None, verbose=None))]
 /// pyo3 version of [get_label_fe]
 pub fn get_label_fe_py(
     veh: &vehicle::RustVehicle,
