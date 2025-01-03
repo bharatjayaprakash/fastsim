@@ -286,6 +286,13 @@ pub struct VehicleDataEPA {
 impl SerdeAPI for VehicleDataEPA {}
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[pyo3(signature = (
+    year,
+    make,
+    model,
+    cache_url=None,
+    data_dir=None,
+))]
 /// Gets options from fueleconomy.gov for the given vehicle year, make, and model
 ///
 /// Arguments:
@@ -335,6 +342,12 @@ pub fn get_options_for_year_make_model(
 }
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[pyo3(signature = (
+    id,
+    year,
+    cache_url=None,
+    data_dir=None,
+))]
 pub fn get_vehicle_data_for_id(
     id: i32,
     year: &str,
@@ -720,6 +733,15 @@ fn match_epatest_with_fegov(
 #[derive(Default, PartialEq, Clone, Debug, Deserialize, Serialize)]
 #[add_pyo3_api(
     #[new]
+    #[pyo3(signature = (
+        vehicle_width_in,
+        vehicle_height_in,
+        fuel_tank_gal,
+        ess_max_kwh,
+        mc_max_kw,
+        ess_max_kw,
+        fc_max_kw=None
+    ))]
     pub fn __new__(
         vehicle_width_in: f64,
         vehicle_height_in: f64,
@@ -753,6 +775,13 @@ pub struct OtherVehicleInputs {
 impl SerdeAPI for OtherVehicleInputs {}
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[pyo3(signature = (
+    vehicle_id,
+    year,
+    other_inputs,
+    cache_url=None,
+    data_dir=None,
+))]
 /// Creates RustVehicle for the given vehicle using data from fueleconomy.gov and EPA databases
 /// The created RustVehicle is also written as a yaml file
 ///
@@ -1287,7 +1316,14 @@ fn load_fegov_data_for_given_years<P: AsRef<Path>>(
     Ok(data)
 }
 #[cfg_attr(feature = "pyo3", pyfunction)]
-
+#[pyo3(signature = (
+    year,
+    make,
+    model,
+    other_inputs,
+    cache_url=None,
+    data_dir=None,
+))]
 /// Import All Vehicles for the given Year, Make, and Model and supplied other inputs
 pub fn import_all_vehicles(
     year: u32,

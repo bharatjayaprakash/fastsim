@@ -14,6 +14,7 @@ use crate::vehicle_thermal::*;
 #[add_pyo3_api(
     /// method for instantiating SimDriveHot
     #[new]
+    #[pyo3(signature = (cyc, veh, vehthrm, init_state=None, amb_te_deg_c=None))]
     pub fn __new__(
         cyc: cycle::RustCycle,
         veh: vehicle::RustVehicle,
@@ -30,6 +31,7 @@ use crate::vehicle_thermal::*;
         Ok(self.gap_to_lead_vehicle_m().to_vec())
     }
      #[pyo3(name = "sim_drive")]
+     #[pyo3(signature = (init_soc=None, aux_in_kw_override=None))]
     /// Initialize and run sim_drive_walk as appropriate for vehicle attribute vehPtType.
     /// Arguments
     /// ------------
@@ -45,6 +47,7 @@ use crate::vehicle_thermal::*;
         self.sim_drive(init_soc, aux_in_kw_override)
     }
 
+    #[pyo3(signature = (init_soc, aux_in_kw_override=None))]
     /// Receives second-by-second cycle information, vehicle properties,
     /// and an initial state of charge and runs sim_drive_step to perform a
     /// backward facing powertrain simulation. Method 'sim_drive' runs this
@@ -66,6 +69,7 @@ use crate::vehicle_thermal::*;
     }
 
     #[pyo3(name = "init_for_step")]
+    #[pyo3(signature = (init_soc, aux_in_kw_override=None))]
     /// This is a specialty method which should be called prior to using
     /// sim_drive_step in a loop.
     /// Arguments
@@ -983,6 +987,13 @@ impl SimDriveHot {
 
 #[add_pyo3_api(
     #[new]
+    #[pyo3(signature = (
+        amb_te_deg_c=None,
+        fc_te_deg_c_init=None,
+        cab_te_deg_c_init=None,
+        exhport_te_deg_c_init=None,
+        cat_te_deg_c_init=None,
+    ))]
     pub fn __new__(
         amb_te_deg_c: Option<f64>,
         fc_te_deg_c_init: Option<f64>,

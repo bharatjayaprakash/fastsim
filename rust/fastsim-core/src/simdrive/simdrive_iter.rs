@@ -11,6 +11,7 @@ use rayon::prelude::*;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[add_pyo3_api(
     #[pyo3(name = "sim_drive")]
+    #[pyo3(signature = (parallelize=None))]
     /// Calls `sim_drive` method for each simdrive instance in vec.
     /// # Arguments:
     /// * parallelize: whether to parallelize `sim_drive` calls, defaults to `true`
