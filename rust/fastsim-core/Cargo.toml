@@ -1,6 +1,6 @@
 [package]
 name = "fastsim-core"
-version = "0.1.7"
+version = "0.1.9"
 edition = "2021"
 rust-version.workspace = true
 license = "Apache-2.0"
@@ -11,7 +11,7 @@ readme = "../../README.md"
 repository = "https://github.com/NREL/fastsim"
 
 [dependencies]
-fastsim-proc-macros = { package = "fastsim-proc-macros", path = "./fastsim-proc-macros", version = "0.1.5" }
+fastsim-proc-macros = { package = "fastsim-proc-macros", path = "./fastsim-proc-macros", version = "0.1.9" }
 pyo3 = { workspace = true, features = [
     "extension-module",
     "anyhow",
