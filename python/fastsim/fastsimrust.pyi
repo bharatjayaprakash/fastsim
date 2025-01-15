@@ -507,6 +507,7 @@ class RustSimDrive(SerdeAPI):
     trans_kj: float
     trans_kw_in_ach: Pyo3ArrayF64
     trans_kw_out_ach: Pyo3ArrayF64
+    use_ess_for_mpgge: bool
     veh: RustVehicle
 
     def __init__(self, cyc: RustCycle, veh: RustVehicle) -> Self:
