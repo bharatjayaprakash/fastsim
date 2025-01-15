@@ -135,7 +135,7 @@ def main(err_tol=1e-4, verbose=True, use_rust=False):
                 abs_err.append(np.abs(df_err.loc[idx, col]))
                 print(f"{df_err.loc[idx, col]:.5%} error for {col}")
                 print(
-                    f"vehicle  : {vehicle.DEFAULT_VEHDF[vehicle.DEFAULT_VEHDF['Selection'] == df.loc[idx, 'vnum']]['Scenario name'].values[0]}")
+                    f"vehicle  : {vehicle.DEFAULT_VEHDF[vehicle.DEFAULT_VEHDF['selection'] == df.loc[idx, 'vnum']]['Scenario name'].values[0]}")
                 print(f"cycle    : {df.loc[idx, 'cycle']}")
                 print('New Value: ' + str(round(df.loc[idx, col], 15)))
                 print('Old Value: ' + str(round(df0.loc[idx, col], 15)))
