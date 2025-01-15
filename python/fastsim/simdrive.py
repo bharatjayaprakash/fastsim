@@ -191,13 +191,16 @@ class SimDrive(object):
     cyc: cycle.Cycle instance
     veh: vehicle.Vehicle instance"""
 
-    def __init__(self, cyc: cycle.Cycle, veh: vehicle.Vehicle):
+    def __init__(self, cyc: cycle.Cycle, veh: vehicle.Vehicle, use_ess_for_mpgge: bool = False):
         """Initalizes arrays, given vehicle.Vehicle() and cycle.Cycle() as arguments.
-        sim_params is needed only if non-default behavior is desired."""
+        sim_params is needed only if non-default behavior is desired.
+        Pass use_ess_for_mpgge = True to use ess for mpgge calculation.
+        """
         self.__init_objects__(cyc, veh)
         self.init_arrays()
         # initialized here for downstream classes that do not run sim_drive
         self.hev_sim_count = 0
+        self.use_ess_for_mpgge = use_ess_for_mpgge
 
     def __init_objects__(self, cyc: cycle.Cycle, veh: vehicle.Vehicle):
         self.veh = veh
@@ -2202,11 +2205,20 @@ class SimDrive(object):
             self.mpgge = 0.0
 
         else:
-            total_energy_kwh = self.fs_kwh_out_ach.sum() + (self.ess_dischg_kj / 3.6e3)
-            self.mpgge = self.dist_mi.sum() / (total_energy_kwh / self.props.kwh_per_gge)
-            if self.fs_kwh_out_ach.sum() > 0 and self.ess_dischg_kj > 0:
-                logger.info(f"MPGGE calculated considering both fuel energy ({self.fs_kwh_out_ach.sum()} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
-            
+            if self.use_ess_for_mpgge:
+                total_energy_kwh = self.fs_kwh_out_ach.sum() + (self.ess_dischg_kj / 3.6e3)
+                self.mpgge = self.dist_mi.sum() / (total_energy_kwh / self.props.kwh_per_gge)
+                if self.fs_kwh_out_ach.sum() > 0 and self.ess_dischg_kj > 0:
+                    logger.info(f"MPGGE calculated considering both fuel energy ({self.fs_kwh_out_ach.sum()} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
+                elif self.fs_kwh_out_ach.sum() > 0:
+                    logger.info(f"MPGGE calculated considering only fuel energy: {self.fs_kwh_out_ach.sum()} kWh")
+                elif self.ess_dischg_kj > 0:
+                    logger.info(f"MPGGE calculated considering only battery discharge energy: {self.ess_dischg_kj / 3.6e3} kWh")
+            else:
+                if self.fs_kwh_out_ach.sum() == 0:
+                    self.mpgge = 0.0
+                else:
+                    self.mpgge = self.dist_mi.sum() / (self.fs_kwh_out_ach.sum() / self.props.kwh_per_gge)
 
         self.roadway_chg_kj = (
             self.roadway_chg_kw_out_ach * self.cyc.dt_s).sum()
@@ -2491,13 +2503,20 @@ class SimDrivePost(object):
 
         output['dist_miles_final'] = sum(np.array(self.dist_mi))
         # Changed to consider both fuel energy and battery discharge energy
-        if (sum(np.array(self.fs_kwh_out_ach)) + self.ess_dischg_kj / 3.6e3) > 0:
-            output['mpgge'] = sum(
-                np.array(self.dist_mi)) / (sum(np.array(self.fs_kwh_out_ach)) + (self.ess_dischg_kj / 3.6e3)) * self.props.kwh_per_gge
-            if sum(np.array(self.fs_kwh_out_ach)) > 0 and self.ess_dischg_kj > 0:
-                logger.info(f"MPGGE calculated considering both fuel energy ({sum(np.array(self.fs_kwh_out_ach))} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
+        if self.use_ess_for_mpgge:
+            if (sum(np.array(self.fs_kwh_out_ach)) + self.ess_dischg_kj / 3.6e3) > 0:
+                output['mpgge'] = sum(
+                    np.array(self.dist_mi)) / (sum(np.array(self.fs_kwh_out_ach)) + (self.ess_dischg_kj / 3.6e3)) * self.props.kwh_per_gge
+                if sum(np.array(self.fs_kwh_out_ach)) > 0 and self.ess_dischg_kj > 0:
+                    logger.info(f"MPGGE calculated considering both fuel energy ({sum(np.array(self.fs_kwh_out_ach))} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
+            else:
+                output['mpgge'] = 0
         else:
-            output['mpgge'] = 0
+            if sum(np.array(self.fs_kwh_out_ach)) > 0:
+                output['mpgge'] = sum(
+                    np.array(self.dist_mi)) / sum(np.array(self.fs_kwh_out_ach)) * self.props.kwh_per_gge
+            else:
+                output['mpgge'] = 0
 
         return output
 
