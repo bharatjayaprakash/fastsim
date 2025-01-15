@@ -2202,7 +2202,11 @@ class SimDrive(object):
             self.mpgge = 0.0
 
         else:
-            self.mpgge = self.dist_mi.sum() / ((self.fs_kwh_out_ach.sum() + (self.ess_dischg_kj / 3.6e3)) / self.props.kwh_per_gge)
+            total_energy_kwh = self.fs_kwh_out_ach.sum() + (self.ess_dischg_kj / 3.6e3)
+            self.mpgge = self.dist_mi.sum() / (total_energy_kwh / self.props.kwh_per_gge)
+            if self.fs_kwh_out_ach.sum() > 0 and self.ess_dischg_kj > 0:
+                logger.info(f"MPGGE calculated considering both fuel energy ({self.fs_kwh_out_ach.sum()} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
+            
 
         self.roadway_chg_kj = (
             self.roadway_chg_kw_out_ach * self.cyc.dt_s).sum()
@@ -2486,9 +2490,12 @@ class SimDrivePost(object):
                    '_neg'] = np.trapz(np.array(tempvars[var + '_neg']), np.array(self.cyc.time_s))
 
         output['dist_miles_final'] = sum(np.array(self.dist_mi))
+        # Changed to consider both fuel energy and battery discharge energy
         if (sum(np.array(self.fs_kwh_out_ach)) + self.ess_dischg_kj / 3.6e3) > 0:
             output['mpgge'] = sum(
                 np.array(self.dist_mi)) / (sum(np.array(self.fs_kwh_out_ach)) + (self.ess_dischg_kj / 3.6e3)) * self.props.kwh_per_gge
+            if sum(np.array(self.fs_kwh_out_ach)) > 0 and self.ess_dischg_kj > 0:
+                logger.info(f"MPGGE calculated considering both fuel energy ({sum(np.array(self.fs_kwh_out_ach))} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
         else:
             output['mpgge'] = 0
 
