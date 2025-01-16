@@ -367,11 +367,11 @@ struct ArrayObject {
 
 /// Takes a vector of floats and transforms it into an object representation
 /// used by the ndarray library.
-fn array_to_object_representation(xs: &Vec<f64>) -> ArrayObject {
+fn array_to_object_representation(xs: &[f64]) -> ArrayObject {
     ArrayObject {
         v: 1,
         dim: vec![xs.len()],
-        data: xs.clone(),
+        data: xs.to_vec().clone(),
     }
 }
 

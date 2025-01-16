@@ -288,6 +288,13 @@ pub struct VehicleDataEPA {
 impl SerdeAPI for VehicleDataEPA {}
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[cfg_attr(feature = "pyo3", pyo3(signature = (
+    year,
+    make,
+    model,
+    cache_url=None,
+    data_dir=None,
+)))]
 /// Gets options from fueleconomy.gov for the given vehicle year, make, and model
 ///
 /// Arguments:
@@ -337,8 +344,15 @@ pub fn get_options_for_year_make_model(
 }
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[cfg_attr(feature = "pyo3", pyo3(signature = (
+    id,
+    year,
+    cache_url=None,
+    data_dir=None,
+)))]
 pub fn get_vehicle_data_for_id(
     id: i32,
+    year: &str,
     year: &str,
     cache_url: Option<String>,
     data_dir: Option<String>,
@@ -353,7 +367,12 @@ pub fn get_vehicle_data_for_id(
     let ddpath = data_dir
         .and_then(|dd| Some(PathBuf::from(dd)))
         .unwrap_or(create_project_subdir("fe_label_data")?);
+    let ddpath = data_dir
+        .and_then(|dd| Some(PathBuf::from(dd)))
+        .unwrap_or(create_project_subdir("fe_label_data")?);
     let cache_url = cache_url.unwrap_or_else(get_default_cache_url);
+    populate_cache_for_given_years_if_needed(ddpath.as_path(), &ys, &cache_url)
+        .with_context(|| format!("Unable to load or download cache data from {cache_url}"))?;
     populate_cache_for_given_years_if_needed(ddpath.as_path(), &ys, &cache_url)
         .with_context(|| format!("Unable to load or download cache data from {cache_url}"))?;
     let emissions_data = load_emissions_data_for_given_years(ddpath.as_path(), &ys)?;
@@ -722,6 +741,15 @@ fn match_epatest_with_fegov(
 #[derive(Default, PartialEq, Clone, Debug, Deserialize, Serialize)]
 #[add_pyo3_api(
     #[new]
+    #[pyo3(signature = (
+        vehicle_width_in,
+        vehicle_height_in,
+        fuel_tank_gal,
+        ess_max_kwh,
+        mc_max_kw,
+        ess_max_kw,
+        fc_max_kw=None
+    ))]
     pub fn __new__(
         vehicle_width_in: f64,
         vehicle_height_in: f64,
@@ -755,6 +783,13 @@ pub struct OtherVehicleInputs {
 impl SerdeAPI for OtherVehicleInputs {}
 
 #[cfg_attr(feature = "pyo3", pyfunction)]
+#[cfg_attr(feature = "pyo3", pyo3(signature = (
+    vehicle_id,
+    year,
+    other_inputs,
+    cache_url=None,
+    data_dir=None,
+)))]
 /// Creates RustVehicle for the given vehicle using data from fueleconomy.gov and EPA databases
 /// The created RustVehicle is also written as a yaml file
 ///
@@ -1290,7 +1325,14 @@ fn load_fegov_data_for_given_years<P: AsRef<Path>>(
     Ok(data)
 }
 #[cfg_attr(feature = "pyo3", pyfunction)]
-
+#[cfg_attr(feature = "pyo3", pyo3(signature = (
+    year,
+    make,
+    model,
+    other_inputs,
+    cache_url=None,
+    data_dir=None,
+)))]
 /// Import All Vehicles for the given Year, Make, and Model and supplied other inputs
 pub fn import_all_vehicles(
     year: u32,
@@ -1506,6 +1548,8 @@ fn extract_file_from_zip(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vehicle_utils::NETWORK_TEST_DISABLE_ENV_VAR_NAME;
+    use std::env;
 
     #[test]
     fn test_create_new_vehicle_from_input_data() {
@@ -1621,6 +1665,10 @@ mod tests {
 
     #[test]
     fn test_get_options_for_year_make_model() {
+        if env::var(NETWORK_TEST_DISABLE_ENV_VAR_NAME).is_ok() {
+            println!("SKIPPING: test_get_options_for_year_make_model");
+            return;
+        }
         let year = String::from("2020");
         let make = String::from("Toyota");
         let model = String::from("Corolla");
@@ -1631,6 +1679,10 @@ mod tests {
 
     #[test]
     fn test_import_robustness() {
+        if env::var(NETWORK_TEST_DISABLE_ENV_VAR_NAME).is_ok() {
+            println!("SKIPPING: test_import_robustness");
+            return;
+        }
         // Ensure 2019 data is cached
         let ddpath = create_project_subdir("fe_label_data").unwrap();
         let model_year = 2019;
@@ -1701,6 +1753,10 @@ mod tests {
 
     #[test]
     fn test_get_options_for_year_make_model_for_specified_cacheurl_and_data_dir() {
+        if env::var(NETWORK_TEST_DISABLE_ENV_VAR_NAME).is_ok() {
+            println!("SKIPPING: test_get_options_for_year_make_model_for_specified_cacheurl_and_data_dir");
+            return;
+        }
         let year = String::from("2020");
         let make = String::from("Toyota");
         let model = String::from("Corolla");

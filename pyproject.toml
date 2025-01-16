@@ -4,12 +4,12 @@ build-backend = "maturin"
 
 [project]
 name = "fastsim"
-version = "2.1.2"
+version = "2.1.4"
 authors = [{ name = "NREL/MTES/CIMS/MBAP Group", email = "fastsim@nrel.gov" }]
 description = "Tool for modeling vehicle powertrains"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.8,<3.11"
+requires-python = ">=3.9,<3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
@@ -35,7 +35,13 @@ dependencies = [
 Homepage = "https://www.nrel.gov/transportation/fastsim.html"
 
 [project.optional-dependencies]
-dev = ["black", "maturin", "plotly", "ipykernel", "pymoo==0.6.0.1"]
+dev = [
+    "black",
+    "maturin",
+    "plotly",
+    "ipykernel",
+    "pymoo==0.6.0.1",
+]
 
 [tool.setuptools]
 zip-safe = false
