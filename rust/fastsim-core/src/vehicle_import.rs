@@ -353,7 +353,6 @@ pub fn get_options_for_year_make_model(
 pub fn get_vehicle_data_for_id(
     id: i32,
     year: &str,
-    year: &str,
     cache_url: Option<String>,
     data_dir: Option<String>,
 ) -> anyhow::Result<VehicleDataFE> {
@@ -367,12 +366,7 @@ pub fn get_vehicle_data_for_id(
     let ddpath = data_dir
         .and_then(|dd| Some(PathBuf::from(dd)))
         .unwrap_or(create_project_subdir("fe_label_data")?);
-    let ddpath = data_dir
-        .and_then(|dd| Some(PathBuf::from(dd)))
-        .unwrap_or(create_project_subdir("fe_label_data")?);
     let cache_url = cache_url.unwrap_or_else(get_default_cache_url);
-    populate_cache_for_given_years_if_needed(ddpath.as_path(), &ys, &cache_url)
-        .with_context(|| format!("Unable to load or download cache data from {cache_url}"))?;
     populate_cache_for_given_years_if_needed(ddpath.as_path(), &ys, &cache_url)
         .with_context(|| format!("Unable to load or download cache data from {cache_url}"))?;
     let emissions_data = load_emissions_data_for_given_years(ddpath.as_path(), &ys)?;
@@ -1672,7 +1666,6 @@ mod tests {
         let year = String::from("2020");
         let make = String::from("Toyota");
         let model = String::from("Corolla");
-        // let id = 41213;
         let options = get_options_for_year_make_model(&year, &make, &model, None, None).unwrap();
         assert!(!options.is_empty());
     }
@@ -1760,7 +1753,6 @@ mod tests {
         let year = String::from("2020");
         let make = String::from("Toyota");
         let model = String::from("Corolla");
-        // let id = 41213;
         let temp_dir = tempfile::tempdir().unwrap();
         let data_dir = temp_dir.path();
         let cacheurl = get_default_cache_url();
