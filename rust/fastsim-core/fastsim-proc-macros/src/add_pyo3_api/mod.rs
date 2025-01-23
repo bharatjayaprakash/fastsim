@@ -204,7 +204,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
     py_impl_block.extend::<TokenStream2>(quote! {
         pub fn copy(&self) -> Self {self.clone()}
         pub fn __copy__(&self) -> Self {self.clone()}
-        pub fn __deepcopy__(&self, _memo: &PyDict) -> Self {self.clone()}
+        pub fn __deepcopy__(&self, _memo: &Bound<PyDict>) -> Self {self.clone()}
 
         /// Read (deserialize) an object from a resource file packaged with the `fastsim-core` crate
         ///
@@ -215,8 +215,12 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         #[cfg(feature = "resources")]
         #[staticmethod]
         #[pyo3(name = "from_resource")]
-        pub fn from_resource_py(filepath: &PyAny, skip_init: Option<bool>) -> PyResult<Self> {
-            Self::from_resource(PathBuf::extract(filepath)?, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
+        #[pyo3(signature = (filepath, skip_init=None))]
+        pub fn from_resource_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> PyResult<Self> {
+            Self::from_resource(
+                PathBuf::extract_bound(filepath)?, 
+                skip_init.unwrap_or_default()
+            ).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
 
         /// Write (serialize) an object to a file.
@@ -228,8 +232,10 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         /// * `filepath`: `str | pathlib.Path` - The filepath at which to write the object
         ///
         #[pyo3(name = "to_file")]
-        pub fn to_file_py(&self, filepath: &PyAny) -> PyResult<()> {
-           self.to_file(PathBuf::extract(filepath)?).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
+        pub fn to_file_py(&self, filepath: &Bound<PyAny>) -> PyResult<()> {
+           self.to_file(
+               PathBuf::extract_bound(filepath)?
+           ).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
 
         /// Read (deserialize) an object from a file.
@@ -241,8 +247,13 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_file")]
-        pub fn from_file_py(filepath: &PyAny, skip_init: Option<bool>) -> PyResult<Self> {
-            Self::from_file(PathBuf::extract(filepath)?, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
+        #[pyo3(signature = (filepath, skip_init=None))]
+        pub fn from_file_py(filepath: &Bound<PyAny>, skip_init: Option<bool>) -> PyResult<Self> {
+            Self::from_file(
+                PathBuf::extract_bound(filepath)?, 
+                skip_init.unwrap_or_default()
+            )
+            .map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
 
         /// Write (serialize) an object into a string
@@ -265,6 +276,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_str")]
+        #[pyo3(signature = (contents, format, skip_init=None))]
         pub fn from_str_py(contents: &str, format: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_str(contents, format, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
@@ -283,6 +295,7 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_json")]
+        #[pyo3(signature = (json_str, skip_init=None))]
         pub fn from_json_py(json_str: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_json(json_str, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
@@ -301,29 +314,30 @@ pub fn add_pyo3_api(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         #[staticmethod]
         #[pyo3(name = "from_yaml")]
+        #[pyo3(signature = (yaml_str, skip_init=None))]
         pub fn from_yaml_py(yaml_str: &str, skip_init: Option<bool>) -> PyResult<Self> {
             Self::from_yaml(yaml_str, skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
         }
 
-        /// Write (serialize) an object to bincode-encoded `bytes`
-        #[cfg(feature = "bincode")]
-        #[pyo3(name = "to_bincode")]
-        pub fn to_bincode_py<'py>(&self, py: Python<'py>) -> PyResult<&'py PyBytes> {
-            PyResult::Ok(PyBytes::new(py, &self.to_bincode()?)).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
-        }
+        // /// Write (serialize) an object to bincode-encoded `bytes`
+        // #[cfg(feature = "bincode")]
+        // #[pyo3(name = "to_bincode")]
+        // pub fn to_bincode_py<'py>(&self, py: Python<'py>) -> PyResult<&'py PyBytes> {
+        //     PyResult::Ok(PyBytes::new(py, &self.to_bincode()?)).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
+        // }
 
-        /// Read (deserialize) an object from bincode-encoded `bytes`
-        ///
-        /// # Arguments
-        ///
-        /// * `encoded`: `bytes` - Encoded bytes to deserialize from
-        ///
-        #[cfg(feature = "bincode")]
-        #[staticmethod]
-        #[pyo3(name = "from_bincode")]
-        pub fn from_bincode_py(encoded: &PyBytes, skip_init: Option<bool>) -> PyResult<Self> {
-            Self::from_bincode(encoded.as_bytes(), skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
-        }
+        // /// Read (deserialize) an object from bincode-encoded `bytes`
+        // ///
+        // /// # Arguments
+        // ///
+        // /// * `encoded`: `bytes` - Encoded bytes to deserialize from
+        // ///
+        // #[cfg(feature = "bincode")]
+        // #[staticmethod]
+        // #[pyo3(name = "from_bincode")]
+        // pub fn from_bincode_py(encoded: &PyBytes, skip_init: Option<bool>) -> PyResult<Self> {
+        //     Self::from_bincode(encoded.as_bytes(), skip_init.unwrap_or_default()).map_err(|e| PyIOError::new_err(format!("{:?}", e)))
+        // }
     });
 
     let impl_block = quote! {

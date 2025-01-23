@@ -12,7 +12,7 @@ use pyo3imports::*;
 
 /// Function for adding Rust structs as Python Classes
 #[pymodule]
-fn fastsimrust(py: Python, m: &PyModule) -> PyResult<()> {
+fn fastsimrust(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     #[cfg(feature = "logging")]
     pyo3_log::init();
     m.add_class::<cycle::RustCycle>()?;

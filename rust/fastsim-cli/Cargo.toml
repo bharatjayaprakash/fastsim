@@ -1,7 +1,8 @@
 [package]
 name = "fastsim-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+rust-version.workspace = true
 license = "Apache-2.0"
 authors = ["NREL/MTES/CIMS/MBAP Group <fastsim@nrel.gov>"]
 description = "CLI app for FASTSim models for vehicle energy usage simulation"

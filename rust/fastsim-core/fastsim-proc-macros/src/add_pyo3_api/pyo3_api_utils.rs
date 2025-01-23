@@ -104,7 +104,6 @@ macro_rules! impl_get_body {
 /// - impl_block: TokenStream2
 /// - has_orphaned: bool, true if struct has `orphaned` field
 /// - opts: FieldOptions struct instance
-
 macro_rules! impl_set_body {
     ( // for generic
         $type: ident, $field: ident, $impl_block: ident, $has_orphaned: expr, $opts: ident
