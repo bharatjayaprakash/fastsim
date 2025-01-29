@@ -2519,8 +2519,7 @@ class SimDrivePost(object):
                     np.array(self.dist_mi)) / sum(np.array(self.fs_kwh_out_ach)) * self.props.kwh_per_gge
             else:
                 output['mpgge'] = 0
-                logger.info(f"MPGGE calculation does not consider battery discharge energy. If you want to use battery discharge energy, set use_ess_for_mpgge to True when calling simdrive.")
-
+                logger.warning(f"MPGGE calculation does not consider battery discharge energy. If you want to use battery discharge energy, set use_ess_for_mpgge to True when calling simdrive.")
 
         return output
 
