@@ -2511,12 +2511,16 @@ class SimDrivePost(object):
                     logger.info(f"MPGGE calculated considering both fuel energy ({sum(np.array(self.fs_kwh_out_ach))} kWh) and battery discharge energy ({self.ess_dischg_kj / 3.6e3} kWh)")
             else:
                 output['mpgge'] = 0
+                logger.info(f"MPGGE is zero because total energy (fuel plus battery) consumed is zero.")
+
         else:
             if sum(np.array(self.fs_kwh_out_ach)) > 0:
                 output['mpgge'] = sum(
                     np.array(self.dist_mi)) / sum(np.array(self.fs_kwh_out_ach)) * self.props.kwh_per_gge
             else:
                 output['mpgge'] = 0
+                logger.info(f"MPGGE calculation does not consider battery discharge energy. If you want to use battery discharge energy, set use_ess_for_mpgge to True when calling simdrive.")
+
 
         return output
 
