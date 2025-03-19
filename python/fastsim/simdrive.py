@@ -2456,13 +2456,15 @@ class SimDrivePost(object):
     """Class for post-processing of SimDrive instance.  Requires already-run 
     SimDrive instance."""
 
-    def __init__(self, sim_drive: SimDrive):
+    def __init__(self, sim_drive: SimDrive, use_ess_for_mpgge: bool = False):
         """Arguments:
         ---------------
         sim_drive: solved sim_drive object"""
 
         for item in inspect_utils.get_attrs(sim_drive):
             self.__setattr__(item, sim_drive.__getattribute__(item))
+        
+        self.use_ess_for_mpgge = use_ess_for_mpgge
 
     # optional post-processing methods
     def get_diagnostics(self):
